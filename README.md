@@ -7,11 +7,12 @@ Install by copying the files in [`commands/`](./commands) into `~/.claude/comman
 ## The cycle
 
 ```
-/architect     → generate  — evidence-first, diverge-wide/converge-precise solution + plan
-/plan-check    → front gate — pressure-test the plan against every quality dimension
-/implement     → middle gate — build to the acceptance criteria (TDD + per-task review)
-/review-loop   → back gate  — multi-dimension eight-lane-floor review, looped to green
-/wear-the-coat → user axis  — persona-driven lived-experience audit of a flow
+/architect      → generate  — evidence-first, diverge-wide/converge-precise solution + plan
+/plan-check     → front gate — pressure-test the plan against every quality dimension
+/implement      → middle gate — build to the acceptance criteria (TDD + per-task review)
+/review-loop    → back gate  — multi-dimension eight-lane-floor review, looped to green
+/wear-the-coat  → user axis  — persona-driven lived-experience audit of a flow
+/pr-description → final step — evidence-backed PR description, gated on a GREEN review
 ```
 
 **Generator → critic → builder → verifier.** The acceptance criteria are the through-line: `/plan-check` emits them, `/implement` builds to them, `/review-loop` verifies against them. `/architect` never grades its own plan — it hands to `/plan-check`.
@@ -27,9 +28,10 @@ This is the team's development pipeline. It used to be a `CLAUDE.md` inside the 
 1. **No code without an approved plan.** Planning is `/architect` and `/plan-check`, done by Opus 5.5 at high effort. The plan is written to `.claude/workflow/plans/` in the working tree (untracked) and must read `STATUS: APPROVED`, by the owner, before anything is built.
 2. **Implementation is `/implement`**, and starts only once the plan is approved. Every task is built by the latest Sonnet at high effort.
 3. **No `git commit` until an adversarial reviewer has written `VERDICT: GREEN`** in BOTH `.claude/workflow/reviews/latest-code.md` and `.claude/workflow/reviews/latest-flow.md` for the current change set. The reviewer is a fresh agent, never the one that wrote the code: a Sonnet reviewer for the code verdict, a Haiku agent running the browser checks for the flow verdict.
-4. **No PR until a flow review passed on the final state being pushed**: actually executed against the running app (Playwright in real Chrome). Any change after the last flow review makes it stale: run it again. For a change with nothing to run (documentation only), say so in the PR instead.
-5. **RED verdict → fix every BLOCKER and MAJOR → re-review** (one sweep reviewer over the fix diff; the full panel is cycle 1 only: `/review-loop`, "Testing budget"). Findings are never argued away or self-downgraded; only the reviewer withdraws a finding.
-6. **Scope changes mid-build go back to planning** for re-approval first.
+4. **No `git commit` until the test-audit report exists.** After the last `git add`, run the `test-audit` skill as analysis only on the staged diff. `.claude/workflow/reviews/latest-test-audit.md` must read `TEST-AUDIT: DONE` on its first line and be newer than the git index: write it after the last `git add`, and write it again after any re-stage (a pre-commit reformat). Removals are proposed to the owner, never deleted silently.
+5. **No PR until a flow review passed on the final state being pushed**: actually executed against the running app (Playwright in real Chrome). Any change after the last flow review makes it stale: run it again. For a change with nothing to run (documentation only), say so in the PR instead. The PR description is written with `/pr-description`, and the PR is created only on a GREEN `/review-loop`.
+6. **RED verdict → fix every BLOCKER and MAJOR → re-review** (one sweep reviewer over the fix diff; the full panel is cycle 1 only: `/review-loop`, "Testing budget"). Findings are never argued away or self-downgraded; only the reviewer withdraws a finding.
+7. **Scope changes mid-build go back to planning** for re-approval first.
 
 The goal: strict reviews, high-grade code quality, an architecture that survives adversarial testing. When in doubt, the stricter interpretation wins.
 
@@ -39,8 +41,9 @@ The goal: strict reviews, high-grade code quality, an architecture that survives
 |---|---|---|
 | Planning | `architect`, `plan-check` | Opus 5.5 · high, for the controller and every agent it dispatches |
 | Implementation | `implement` | the latest Sonnet · high, for every task, and only once the plan is approved |
-| Review | `review-loop`, the per-task reviews of `implement` | Sonnet, for every lane and for the reviewer that writes the code verdict |
+| Review | `review-loop`, the per-task reviews of `implement` | Sonnet, for every lane and for the reviewer that writes the code verdict; also the pre-commit `test-audit` (analysis only) |
 | Browser testing | the real-browser gate and the flow review | Haiku: it runs the check scripts in Chrome, applies their pass rule, reads the screenshots and writes the flow verdict. A check script is code and is written by Sonnet |
+| PR description | `pr-description` | the latest Sonnet · high writes it and does the caller / flow search; Haiku runs the check scripts for the before / after screenshots and reads them |
 | Persona audit | `wear-the-coat` | as that command's own table says |
 
 A task Sonnet cannot get right is taken back to planning, not handed to a bigger model.
@@ -56,6 +59,7 @@ A task Sonnet cannot get right is taken back to planning, not handed to a bigger
 | `implement` | Build to the criteria with the quality dimensions as live guardrails. |
 | `review-loop` | Multi-dimension Phase-1-floor review loop with a coverage gate. |
 | `wear-the-coat` | Wear a profession's coat and audit a flow's lived experience. |
+| `pr-description` | Write the PR description once the review is GREEN — five fixed sections in Simplified Technical English, screenshots kept out of git. |
 
 ## UI is verified in a real browser
 
