@@ -63,6 +63,20 @@ PRs, publish, or merge only when authorized by the task and applicable rules.
 When a full build/review workflow is requested, continue through scoped review and
 fixes; do not stop at a proposed plan or ask again for already-authorized steps.
 
+## Pre-commit test audit
+
+After the last `git add`, run `npx skills add mblode/agent-skills --skill test-audit -g -a codex`.
+Run the test-audit skill as analysis only on the staged diff. Write the report to
+`.claude/workflow/reviews/latest-test-audit.md` with the first line `TEST-AUDIT: DONE`.
+The report must be newer than the git index: write it after the last `git add`, and
+write it again after any re-stage. Propose test removals to the owner; never delete
+a test silently. If the `npx skills add` command fails (offline, no `npx`), say so to
+the owner and do not write `TEST-AUDIT: DONE`; the commit waits.
+
+## PR handoff
+
+Write the PR body with `$ct-pr-description`. Open a PR only on a GREEN review.
+
 ## Codex execution
 
 Use available shell/edit/test tools and the selected session model, targeting

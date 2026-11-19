@@ -10,6 +10,7 @@ SKILL_NAMES = (
     "ct-plan-check",
     "ct-implement",
     "ct-review-loop",
+    "ct-pr-description",
     "ct-wear-the-coat",
     "ct-release-notes",
 )

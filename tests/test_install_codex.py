@@ -31,7 +31,7 @@ class InstallTests(unittest.TestCase):
         )
 
     def test_dry_run_does_not_create_destination(self):
-        self.assertEqual(len(installer.install(self.destination, dry_run=True)), 6)
+        self.assertEqual(len(installer.install(self.destination, dry_run=True)), len(installer.SKILL_NAMES))
         self.assertFalse(self.destination.exists())
 
     def test_conflict_does_not_partially_install_or_overwrite(self):

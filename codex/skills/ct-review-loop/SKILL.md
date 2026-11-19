@@ -85,6 +85,20 @@ Return findings (or no substantiated findings), coverage, executed verification,
 and residual risks. A clean result means no identified defects within the reviewed
 scope, not a guarantee. Do not merge or publish merely because a review is clean.
 
+## Recording the gate result
+
+When the review is the pipeline gate before a commit or PR, record it in
+`.claude/workflow/reviews/latest-code.md`. The first line is exactly `VERDICT: GREEN`
+or `VERDICT: RED`; the result is RED while any critical or important finding stands.
+Then list the scope (branch, base, `HEAD` and the diff hash), the cycle number, the
+reviewer (and whether it was a single-agent review) and the dimensions covered.
+Compute the diff hash with `git diff <remote>/<base>...HEAD | sha256sum` for a
+committed change set, or `git diff <remote>/<base> | sha256sum` for an uncommitted
+review (working tree including staged; list untracked files by name). A recorded
+`HEAD` that is an ancestor of the current `HEAD` with an unchanged diff hash is not stale.
+Record the flow or browser result in `.claude/workflow/reviews/latest-flow.md` the
+same way. `VERDICT: GREEN — N/A: <reason>` is valid only for a documentation-only change.
+
 ## Codex execution
 
 Use the session model, targeting `gpt-6-astra`. These dimensions are self-contained;

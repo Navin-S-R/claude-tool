@@ -6,7 +6,7 @@ Install by copying the files in [`commands/`](./commands) into `~/.claude/comman
 
 ## Codex / GPT-6 Astra
 
-The six workflows are also available as self-contained [Codex skills](./codex/skills).
+The seven workflows are also available as self-contained [Codex skills](./codex/skills).
 The official model identifier is `gpt-6-astra` (rather than `chatgpt-6-astra`).
 Select that model in your Codex client, or start the CLI with:
 
@@ -26,11 +26,11 @@ python3 scripts/install_codex.py --dry-run
 python3 scripts/install_codex.py
 ```
 
-This creates six symlinks under `~/.agents/skills`, the user-level Codex discovery
+This creates seven symlinks under `~/.agents/skills`, the user-level Codex discovery
 location. It refuses to replace existing directories or conflicting links and can
 be rerun safely. Keep this checkout in place; edits and branch switches affect the
 linked skills. To install for only one project, pass `--destination /path/to/repo/.agents/skills`.
-To uninstall, remove only these six symlinks from the destination; the source stays.
+To uninstall, remove only these seven symlinks from the destination; the source stays.
 If the skills do not appear after installation, restart the Codex session.
 
 | Claude command | Codex invocation |
@@ -39,19 +39,21 @@ If the skills do not appear after installation, restart the Codex session.
 | `/plan-check` | `$ct-plan-check` |
 | `/implement` | `$ct-implement` |
 | `/review-loop` | `$ct-review-loop` |
+| `/pr-description` | `$ct-pr-description` |
 | `/wear-the-coat` | `$ct-wear-the-coat` |
 | `/release-notes` | `$ct-release-notes` |
 
 Normal automatic skill selection remains enabled. For ongoing work, select the
-relevant stage rather than loading all six: architecture for design choices,
+relevant stage rather than loading all seven: architecture for design choices,
 plan checking for a proposal, implementation for authorized changes, review for a
-diff, persona audit for an experience question, release notes for specified PRs.
+diff, persona audit for an experience question, release notes for specified PRs,
+PR description for a change with a GREEN review.
 Explicit invocation is available when you want a particular workflow.
 
 ### Jarvis SOP and readiness
 
 For authorized Jarvis feature and fix work, follow **ct-architect → ct-plan-check →
-ct-implement → ct-review-loop + ct-wear-the-coat**. Load each stage when needed and
+ct-implement → ct-review-loop + ct-wear-the-coat → ct-pr-description**. Load each stage when needed and
 scale its effort to risk; small edits need brief reasoning, not a large ceremony.
 A request only to explain, plan or review remains within that requested scope.
 Existing authorization carries forward without repeated approval questions.
