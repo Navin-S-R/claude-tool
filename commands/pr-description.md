@@ -1,5 +1,5 @@
 ---
-description: PR-description writer — the final step of the pipeline; gated on a GREEN /review-loop code verdict and a GREEN flow verdict, five fixed sections in ASD-STE100 Simplified Technical English, screenshots kept out of git
+description: PR-description writer — the final step of the pipeline; gated on a GREEN /review-loop code verdict and a GREEN flow verdict, five short fixed sections in ASD-STE100 Simplified Technical English, screenshots uploaded as GitHub attachments (inline, never in git)
 argument-hint: "[base branch | PR# | ticket ref | blank = the open PR's base, else trunk] [+focus]"
 ---
 
@@ -38,28 +38,32 @@ Run it **before anything is written**, at **every tier**. If a check fails, **st
 At **gate 1**, write the record to `.claude/workflow/pr-assets/<slug>/gate.md`: the `HEAD` SHA, the change-set list, the diff hash, and the mtime and first line of both verdict files. Run the image check (section 6) as well. The gate runs a **second time** (see section 7) and compares against that file; any difference blocks.
 
 ## 3. Gather the context (find, never guess)
-- `git diff <remote>/<base>...HEAD`, `git log <remote>/<base>..HEAD`; the approved plan in `.claude/workflow/plans/` and its acceptance criteria; both verdict files with their cycle counts (when the files hold them); the ticket the owner names.
-- `.claude/workflow/reviews/latest-test-audit.md`, when it exists.
+- `git diff <remote>/<base>...HEAD`, `git log <remote>/<base>..HEAD`; the approved plan in `.claude/workflow/plans/` and its acceptance criteria; both verdict files; the ticket the owner names.
+- Use the verdict files for the gates. Use the acceptance criteria to check your claims. The body does not use the cycle counts or the test-audit report: do not read them.
 - **Every file, function, API and user flow the change touches.** Find callers and usages with grep and the code; do not recall them from memory. Scale the depth to the tier (see above).
 
 ## 4. Write the five sections — exact headings, exact order, none skipped, renamed or merged
 Emit each heading at level `###`, text copied exactly.
 
+**Keep it short.** A reviewer reads the whole description in about two minutes. Target: under 250 words of prose, excluding the screenshot table. The target is soft: the flow-coverage bullets and the unverified line override it. Write for the reviewer of the code, not as an audit log of the pipeline.
+- Do not restate the diff, list every file, or explain how the pipeline ran.
+- Leave out: verdict quotes, review cycle counts, the test-audit result, lane names, the risk tier, the acceptance-criteria table, the alternatives considered. The gates still apply; their details stay in `.claude/workflow/`.
+- No empty filler. If a part has nothing to say, write one short line.
+
 ### Issue Description
-What was broken or missing, who it affected, why it matters. The ticket ID, if any.
+Two to four sentences: what was broken or missing, and who it affected. The ticket ID, if any.
 ### Steps to Reproduce
-Numbered steps on the **base** branch: environment, preconditions, test data, expected result, actual result. For a new feature, the steps may show the behaviour that is not there yet.
+At most six numbered steps on the **base** branch, ending with the expected and the actual result. For a new feature: one line that says what the user cannot do yet.
 ### Solution Provided
-What changed and why this approach. Each changed file or module with a one-line reason. The alternatives `/architect` considered, if the plan records them.
+Two to five sentences or bullets: what changed and why. Name a file only when the reviewer needs it to follow the change (a non-obvious location, a migration, a config).
 ### Impact Analysis – Proof That Existing Flows Are Not Affected
 (The dash is an en dash `–`; copy the heading exactly.)
-- Every existing flow that touches the changed code, and for each one how it was verified: unit test, integration test, real-browser check, or unaffected by design (say why).
-- Each acceptance criterion mapped to its evidence.
-- The code and flow verdicts, quoted, with the number of review cycles. Take the count from the verdict files, else from the `/implement` ledger or the `cycle*` copies in `.claude/workflow/reviews/`; if none records it, write "cycles: not recorded". The `latest-test-audit.md` result, quoted when the report exists (evidence only; it is not a PR gate).
-- The test commands that ran and their results: pass counts, coverage delta if known. If this command runs no tests, quote the results from the verdict files and say so.
-- Risk tier, remaining risk, rollback plan. Anything you cannot verify is **stated here as unverified**.
+- One bullet per existing flow that touches the changed code: the flow, then how it was verified (test name, browser check, or "unaffected by design" with the reason in a few words).
+- One line with the tests that ran and the result (for example `bench run-tests --app jarvis: 214 passed`). Take the numbers from a command you ran or from the verdict files; never invent them.
+- One line for rollback, only if it is more than "revert the PR" (a migration, a data patch, a flag).
+- Anything you cannot verify: one line, stated as unverified.
 ### Before and After Screenshots
-Table `Scenario | Before | After`, one row per affected screen or state. See section 6. No UI → "N/A – no UI changes", plus before / after logs, API responses or CLI output.
+Table `Scenario | Before | After`, one row per affected screen or state, with the images inline (see section 6). No UI → "N/A – no UI changes", and at most one short before / after log or API response if it helps.
 
 ## 5. Language — ASD-STE100 Simplified Technical English (all prose)
 - Procedural sentences: 20 words maximum, one instruction each, imperative. Descriptive sentences: 25 words maximum, one topic each. Paragraphs: six sentences maximum.
@@ -73,9 +77,19 @@ Table `Scenario | Before | After`, one row per affected screen or state. See sec
 
 ## 6. Screenshots (strict)
 - **Never committed to any codebase.** Store them in `.claude/workflow/pr-assets/<slug>/`, with `before/` and `after/` inside (the slug and the exclude step are in section 1). Create these folders only when there are screenshots.
-- **After:** the Haiku agent runs the flow review's check script on the final state with `SHOTS=<absolute assets dir>/after sh tools/ui-browser-check/run.sh <frontend-dir> <check.mjs>` (Jarvis SPAs; another harness uses its own screenshot option). Or it copies the flow review's own screenshots of the same final state into `after/`, if they exist.
+- **After:** the Haiku agent runs the flow review's check script on the final state with `SHOTS=<absolute assets dir>/after sh ~/.claude/tools/ui-browser-check/run.sh <frontend-dir> <check.mjs>` (Jarvis SPAs; another harness uses its own screenshot option). Or it copies the flow review's own screenshots of the same final state into `after/`, if they exist.
 - **Before:** the same script on the base branch in a temporary `git worktree add` (a temp dir), with `SHOTS=<absolute assets dir>/before`. For the Jarvis SPAs, run `npm ci` in `frontend/` and in `wiki-graph-core/` of that worktree first. Remove the worktree afterwards (`git worktree remove`). If the screen did not exist on the base, the cell says so.
-- A placeholder, such as `<!-- drag before-login.png here -->`, may name only a file that exists on disk. List the exact local paths below the table so the owner can drag them into the GitHub editor. A cell with no screenshot says "unverified — no screenshot (<reason>)", and Impact Analysis states it.
+- **Upload, then embed.** The PR shows the images inline; the owner never drags files. The Haiku agent uploads the screenshots as GitHub attachments with `~/.claude/tools/gh-image-upload/upload.mjs` (from [`tools/gh-image-upload`](../tools/gh-image-upload)). It uses real Chrome and commits nothing.
+  - **When.** Upload only after the owner confirms the description (section 7). Before the confirm, the table cells show the local paths, so the owner can open the files.
+  - **Data rule.** Upload only screenshots of test or synthetic data. If a screenshot can show real customer data, or the repo is public and you are not sure, do not upload. Use the fallback and tell the owner.
+  - **Preflight.** Run `test -f ~/.claude/tools/gh-image-upload/upload.mjs && test -d ~/.claude/tools/gh-image-upload/node_modules`. If it fails, tell the owner the one-time install command from the root README and use the fallback.
+  - **Repo.** Use the BASE repo of the PR (for a fork, use `--pr` after the PR exists).
+  - **Mode.** If a PR for the branch exists (`gh pr list --head <branch> --json number`), use `--pr <n>`. Otherwise use `--base <b> --branch <br>`. The branch must be on the remote. Pushing it needs the owner's OK, as part of the confirm in section 7, never before.
+  - **Command.** `node ~/.claude/tools/gh-image-upload/upload.mjs --repo <base owner/repo> (--pr <n> | --base <b> --branch <br>) --cache .claude/workflow/pr-assets/<slug>/uploads.md <files>`. Run it with a Bash timeout of 300000 ms. The script never waits for a human.
+  - **Read the result for each file.** A `URL` line gives the image URL: use its LAST token in `<img src="<url>" width="280" alt="<scenario> before|after">`. Use every `URL` line, even when the exit code is not 0.
+  - **Fallback.** A file with no `URL` line (a `FAIL`, `ERRORS` or `LOGIN` line, a crash, a timeout, or a non-zero exit with no output) gets the fallback, for that file only. The cell text is "screenshot not uploaded (see author)". Tell the owner in chat why, and list the local paths so the owner can drag them in.
+  - **`LOGIN` (exit 4).** Tell the owner to run `! node ~/.claude/tools/gh-image-upload/upload.mjs --login` once, then run the upload again. On a server with no screen, the owner runs `xvfb-run -a node ~/.claude/tools/gh-image-upload/upload.mjs --login --terminal` in their own terminal instead. Never enter a credential or a 2FA code. Never read or copy the cookies of the profile. Never run your own Playwright against that profile.
+- A cell with no screenshot at all says "unverified — no screenshot (<reason>)", and Impact Analysis states it.
 - A UI change with no check script → stop and ask. A check script is code, written by Sonnet.
 - **Image check** (at gate 1, again at gate 2, and before you finish). It looks for images (extensions `png`, `jpg`, `jpeg`, `gif`, `webp`) that the change set adds, stages or leaves untracked. The `.claude/` exclusion applies only to the untracked check; a committed or staged image anywhere, `.claude/` included, counts. "Already tracked" always means tracked in `<remote>/<base>`: do not flag such an image, or a rename of it. Run:
   - `git diff --diff-filter=A --name-only <remote>/<base>...HEAD`
@@ -87,9 +101,11 @@ Table `Scenario | Before | After`, one row per affected screen or state. See sec
   A match in a commit of the branch → **STOP**. Do not create or edit the PR until the owner removes it from the commits. A staged match → unstage it (`git restore --staged <path>`); if it stays, stop. An untracked match → ask the owner to move it or ignore it, and stop to tell the owner. The owner may state in the session that an added image is a product asset. Quote that statement in Impact Analysis. Then the image is not a screenshot and it does not stop the PR.
 
 ## 7. Output
-- **Print the description in Markdown first.** Do not create or update the PR yet.
+- **Print the description in Markdown first**, with the local screenshot paths in the table. Do not create or update the PR yet.
+- **Ask the owner to confirm.** In the same question, ask whether to push the branch, if it is not on the remote.
 - After the owner **explicitly confirms**, run `git fetch <remote>` first. For a PR number, also re-read `gh pr view <n> --json headRefOid`. Then **re-run both gates** (section 2, staleness included) and the image check **immediately before** the call. Compare them with the `gate.md` record. If `gate.md` is missing, stop and run gate 1 again. If anything differs — a new commit, an edited file, a RED or stale verdict, an image match — **do not create the PR**: say which gate failed.
 - Before `gh pr create`, local `HEAD` must equal `<remote>/<branch>`; if not, stop and tell the owner to push or reconcile. Before `gh pr edit`, read `gh pr view <n> --json headRefOid` again, right before the edit. Local `HEAD` must equal it.
+- After the confirm and the gates: push the branch if the owner approved, then upload the screenshots (section 6), then replace the local paths with the URLs. Uploads that stay unused remain in GitHub's store, but no page links them.
 - Then write the description to `.claude/workflow/pr-assets/<slug>/pr-body.md` and run `gh pr create --body-file <file>` (new PR) or `gh pr edit --body-file <file>` (existing PR). Add no commit or PR attribution of your own; the project's and the owner's rules apply.
 - **Never invent** a test result, flow, verdict, number or screenshot.
 
@@ -97,7 +113,7 @@ Table `Scenario | Before | After`, one row per affected screen or state. See sec
 | Role | Model · effort |
 |---|---|
 | Write the description; the caller / flow search (T2/T3: the per-subsystem explorers) | latest Sonnet · high |
-| Run the check scripts for the before / after screenshots, and read them | Haiku |
+| Run the check scripts for the before / after screenshots, read them, and upload them with `gh-image-upload` | Haiku |
 | Write a new or changed check script (it is code) | latest Sonnet · high |
 
 No Opus and no Fable are used by this command.
@@ -105,6 +121,7 @@ No Opus and no Fable are used by this command.
 ## Guardrails
 - **No green, no description.** A RED, stale, missing or non-`/review-loop` verdict stops the command; it never writes around it.
 - **Proof, not assumption.** Every flow, number and verdict comes from code, a file or a command you ran. Unverifiable items are stated as such.
-- **Screenshots stay out of git.** No `.gitignore` edit; no image that the change adds is staged, committed or untracked in the tree.
+- **Screenshots stay out of git and show inline.** They are uploaded as GitHub attachments, never committed. No `.gitignore` edit; no image that the change adds is staged, committed or untracked in the tree.
+- **Short beats complete.** The pipeline's evidence lives in `.claude/workflow/`; the PR carries only what a reviewer needs.
 - **The owner confirms before the PR is created or edited**, and the gates run again first.
 - Keep the five headings and their order, always.
