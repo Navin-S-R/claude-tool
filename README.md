@@ -60,6 +60,8 @@ be rerun safely. Keep this checkout in place; edits and branch switches affect t
 linked skills. To install for only one project, pass `--destination /path/to/repo/.agents/skills`.
 To uninstall, remove only these seven symlinks from the destination; the source stays.
 If the skills do not appear after installation, restart the Codex session.
+`<checkout>` in this section is the checkout you used for `install_codex.py`.
+For the screenshot upload, do the [one-time setup](#one-time-setup-for-screenshots) too.
 
 | Claude command | Codex invocation |
 |---|---|
@@ -91,6 +93,26 @@ effects, supported environments, affected existing controls and data lifecycle.
 Reviewer findings need individual dispositions and verification. Report unresolved
 gaps explicitly; green CI and self-review do not establish independent validation.
 These requirements live in the stage skills so they apply when invoked separately.
+
+### One-time setup for screenshots
+
+`ct-pr-description` uploads screenshots with [`tools/gh-image-upload`](./tools/gh-image-upload),
+so the PR shows them inline. It needs Node 18 or newer and Google Chrome.
+On a machine with no display, it also needs `xvfb` (the `xvfb-run` command).
+Install its dependencies once:
+
+```sh
+cd <checkout>/tools/gh-image-upload && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci
+```
+
+Then sign in to GitHub once. The owner does this in their own terminal, never an agent:
+
+```sh
+xvfb-run -a node <checkout>/tools/gh-image-upload/upload.mjs --login --terminal
+```
+
+Use `--login` instead of `--login --terminal` when you have a display.
+The sign-in is complete when the script prints `LOGIN-OK <user>`.
 
 ### Adaptation decisions
 
