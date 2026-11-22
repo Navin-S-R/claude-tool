@@ -38,14 +38,14 @@ Run it **before anything is written**, at **every tier**. If a check fails, **st
 At **gate 1**, write the record to `.claude/workflow/pr-assets/<slug>/gate.md`: the `HEAD` SHA, the change-set list, the diff hash, and the mtime and first line of both verdict files. Run the image check (section 6) as well. The gate runs a **second time** (see section 7) and compares against that file; any difference blocks.
 
 ## 3. Gather the context (find, never guess)
-- `git diff <remote>/<base>...HEAD`, `git log <remote>/<base>..HEAD`; the approved plan in `.claude/workflow/plans/` and its acceptance criteria; both verdict files with their cycle counts (when the files hold them); the ticket the owner names.
-- `.claude/workflow/reviews/latest-test-audit.md`, when it exists.
+- `git diff <remote>/<base>...HEAD`, `git log <remote>/<base>..HEAD`; the approved plan in `.claude/workflow/plans/` and its acceptance criteria; both verdict files; the ticket the owner names.
+- Use the verdict files for the gates. Use the acceptance criteria to check your claims. The body does not use the cycle counts or the test-audit report: do not read them.
 - **Every file, function, API and user flow the change touches.** Find callers and usages with grep and the code; do not recall them from memory. Scale the depth to the tier (see above).
 
 ## 4. Write the five sections — exact headings, exact order, none skipped, renamed or merged
 Emit each heading at level `###`, text copied exactly.
 
-**Keep it short.** A reviewer reads the whole description in about two minutes. Target: under 250 words of prose, excluding the screenshot table. Write for the reviewer of the code, not as an audit log of the pipeline.
+**Keep it short.** A reviewer reads the whole description in about two minutes. Target: under 250 words of prose, excluding the screenshot table. The target is soft: the flow-coverage bullets and the unverified line override it. Write for the reviewer of the code, not as an audit log of the pipeline.
 - Do not restate the diff, list every file, or explain how the pipeline ran.
 - Leave out: verdict quotes, review cycle counts, the test-audit result, lane names, the risk tier, the acceptance-criteria table, the alternatives considered. The gates still apply; their details stay in `.claude/workflow/`.
 - No empty filler. If a part has nothing to say, write one short line.
@@ -77,15 +77,18 @@ Table `Scenario | Before | After`, one row per affected screen or state, with th
 
 ## 6. Screenshots (strict)
 - **Never committed to any codebase.** Store them in `.claude/workflow/pr-assets/<slug>/`, with `before/` and `after/` inside (the slug and the exclude step are in section 1). Create these folders only when there are screenshots.
-- **After:** the Haiku agent runs the flow review's check script on the final state with `SHOTS=<absolute assets dir>/after sh tools/ui-browser-check/run.sh <frontend-dir> <check.mjs>` (Jarvis SPAs; another harness uses its own screenshot option). Or it copies the flow review's own screenshots of the same final state into `after/`, if they exist.
+- **After:** the Haiku agent runs the flow review's check script on the final state with `SHOTS=<absolute assets dir>/after sh ~/.claude/tools/ui-browser-check/run.sh <frontend-dir> <check.mjs>` (Jarvis SPAs; another harness uses its own screenshot option). Or it copies the flow review's own screenshots of the same final state into `after/`, if they exist.
 - **Before:** the same script on the base branch in a temporary `git worktree add` (a temp dir), with `SHOTS=<absolute assets dir>/before`. For the Jarvis SPAs, run `npm ci` in `frontend/` and in `wiki-graph-core/` of that worktree first. Remove the worktree afterwards (`git worktree remove`). If the screen did not exist on the base, the cell says so.
-- **Upload, then embed.** The PR shows the images inline; the owner never drags files. After the screenshots exist, the Haiku agent uploads them as GitHub attachments with `~/.claude/tools/gh-image-upload/upload.mjs` (from [`tools/gh-image-upload`](../tools/gh-image-upload)) (real Chrome, nothing committed):
-  - Open PR: `node ~/.claude/tools/gh-image-upload/upload.mjs --repo <owner/repo> --pr <n> <files>`.
-  - No PR yet: push the branch first (section 7 needs it anyway), then `node ~/.claude/tools/gh-image-upload/upload.mjs --repo <owner/repo> --base <base> --branch <branch> <files>`.
-  - `<owner/repo>` comes from `gh repo view --json nameWithOwner -q .nameWithOwner`.
-  - Each `URL <file> <url>` line gives the image URL. Put it in the table cell as `<img src="<url>" width="420">`. Write the URLs to `.claude/workflow/pr-assets/<slug>/uploads.md` so a re-run does not upload again.
-  - `LOGIN` means the upload profile is not signed in: tell the owner to sign in to GitHub in the Chrome window that opened. Never type a password.
-  - **Fallback** (a `FAIL` / `ERRORS` line, or no Chrome): write "screenshot not uploaded — `<local path>`" in that cell, say why in one line below the table, and tell the owner. Never use a placeholder that names a file that does not exist.
+- **Upload, then embed.** The PR shows the images inline; the owner never drags files. The Haiku agent uploads the screenshots as GitHub attachments with `~/.claude/tools/gh-image-upload/upload.mjs` (from [`tools/gh-image-upload`](../tools/gh-image-upload)). It uses real Chrome and commits nothing.
+  - **When.** Upload only after the owner confirms the description (section 7). Before the confirm, the table cells show the local paths, so the owner can open the files.
+  - **Data rule.** Upload only screenshots of test or synthetic data. If a screenshot can show real customer data, or the repo is public and you are not sure, do not upload. Use the fallback and tell the owner.
+  - **Preflight.** Run `test -f ~/.claude/tools/gh-image-upload/upload.mjs && test -d ~/.claude/tools/gh-image-upload/node_modules`. If it fails, tell the owner the one-time install command from the root README and use the fallback.
+  - **Repo.** Use the BASE repo of the PR (for a fork, use `--pr` after the PR exists).
+  - **Mode.** If a PR for the branch exists (`gh pr list --head <branch> --json number`), use `--pr <n>`. Otherwise use `--base <b> --branch <br>`. The branch must be on the remote. Pushing it needs the owner's OK, as part of the confirm in section 7, never before.
+  - **Command.** `node ~/.claude/tools/gh-image-upload/upload.mjs --repo <base owner/repo> (--pr <n> | --base <b> --branch <br>) --cache .claude/workflow/pr-assets/<slug>/uploads.md <files>`. Run it with a Bash timeout of 300000 ms. The script never waits for a human.
+  - **Read the result for each file.** A `URL` line gives the image URL: use its LAST token in `<img src="<url>" width="280" alt="<scenario> before|after">`. Use every `URL` line, even when the exit code is not 0.
+  - **Fallback.** A file with no `URL` line (a `FAIL`, `ERRORS` or `LOGIN` line, a crash, a timeout, or a non-zero exit with no output) gets the fallback, for that file only. The cell text is "screenshot not uploaded (see author)". Tell the owner in chat why, and list the local paths so the owner can drag them in.
+  - **`LOGIN` (exit 4).** Tell the owner to run `! node ~/.claude/tools/gh-image-upload/upload.mjs --login` once, then run the upload again. On a server with no screen, the owner runs `xvfb-run -a node ~/.claude/tools/gh-image-upload/upload.mjs --login --terminal` in their own terminal instead. Never enter a credential or a 2FA code. Never read or copy the cookies of the profile. Never run your own Playwright against that profile.
 - A cell with no screenshot at all says "unverified — no screenshot (<reason>)", and Impact Analysis states it.
 - A UI change with no check script → stop and ask. A check script is code, written by Sonnet.
 - **Image check** (at gate 1, again at gate 2, and before you finish). It looks for images (extensions `png`, `jpg`, `jpeg`, `gif`, `webp`) that the change set adds, stages or leaves untracked. The `.claude/` exclusion applies only to the untracked check; a committed or staged image anywhere, `.claude/` included, counts. "Already tracked" always means tracked in `<remote>/<base>`: do not flag such an image, or a rename of it. Run:
@@ -98,9 +101,11 @@ Table `Scenario | Before | After`, one row per affected screen or state, with th
   A match in a commit of the branch → **STOP**. Do not create or edit the PR until the owner removes it from the commits. A staged match → unstage it (`git restore --staged <path>`); if it stays, stop. An untracked match → ask the owner to move it or ignore it, and stop to tell the owner. The owner may state in the session that an added image is a product asset. Quote that statement in Impact Analysis. Then the image is not a screenshot and it does not stop the PR.
 
 ## 7. Output
-- **Print the description in Markdown first.** Do not create or update the PR yet.
+- **Print the description in Markdown first**, with the local screenshot paths in the table. Do not create or update the PR yet.
+- **Ask the owner to confirm.** In the same question, ask whether to push the branch, if it is not on the remote.
 - After the owner **explicitly confirms**, run `git fetch <remote>` first. For a PR number, also re-read `gh pr view <n> --json headRefOid`. Then **re-run both gates** (section 2, staleness included) and the image check **immediately before** the call. Compare them with the `gate.md` record. If `gate.md` is missing, stop and run gate 1 again. If anything differs — a new commit, an edited file, a RED or stale verdict, an image match — **do not create the PR**: say which gate failed.
 - Before `gh pr create`, local `HEAD` must equal `<remote>/<branch>`; if not, stop and tell the owner to push or reconcile. Before `gh pr edit`, read `gh pr view <n> --json headRefOid` again, right before the edit. Local `HEAD` must equal it.
+- After the confirm and the gates: push the branch if the owner approved, then upload the screenshots (section 6), then replace the local paths with the URLs. Uploads that stay unused remain in GitHub's store, but no page links them.
 - Then write the description to `.claude/workflow/pr-assets/<slug>/pr-body.md` and run `gh pr create --body-file <file>` (new PR) or `gh pr edit --body-file <file>` (existing PR). Add no commit or PR attribution of your own; the project's and the owner's rules apply.
 - **Never invent** a test result, flow, verdict, number or screenshot.
 

@@ -2,11 +2,35 @@
 
 Custom [Claude Code](https://claude.com/claude-code) slash commands for a **risk-tiered, evidence-first development cycle**.
 
-Install: copy [`commands/`](./commands) into `~/.claude/commands/` and [`tools/`](./tools) into `~/.claude/tools/`:
+Install, in one of two ways. The tools need Google Chrome and Node 18 or newer.
+
+Copy (run again after each pull):
 
 ```sh
-cp commands/*.md ~/.claude/commands/ && mkdir -p ~/.claude/tools && cp -r tools/* ~/.claude/tools/
+cp commands/*.md ~/.claude/commands/; mkdir -p ~/.claude/tools && cp -r tools/* ~/.claude/tools/ && (cd ~/.claude/tools/gh-image-upload && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci)
 ```
+
+Link (a clone that you keep up to date with `git pull`). If `~/.claude/tools` is already a real directory, move or remove it first.
+
+```sh
+ln -sf "$PWD"/commands/*.md ~/.claude/commands/ && ln -sfn "$PWD/tools" ~/.claude/tools && (cd tools/gh-image-upload && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci)
+```
+
+If `~/.claude/tools` is already a symlink to the `tools` folder of this clone, use the link variant. The copy variant fails with "same file".
+
+For an existing clone at `~/review`, run this one line:
+
+```sh
+ln -sfn ~/review/tools ~/.claude/tools && (cd ~/review/tools/gh-image-upload && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci)
+```
+
+Then, once, the owner signs in to GitHub for the screenshot upload:
+
+```sh
+node ~/.claude/tools/gh-image-upload/upload.mjs --login
+```
+
+On a server with no screen, the owner types `xvfb-run -a node ~/.claude/tools/gh-image-upload/upload.mjs --login --terminal` in their own terminal.
 
 ## The cycle
 
@@ -47,7 +71,7 @@ The goal: strict reviews, high-grade code quality, an architecture that survives
 | Implementation | `implement` | the latest Sonnet · high, for every task, and only once the plan is approved |
 | Review | `review-loop`, the per-task reviews of `implement` | Sonnet, for every lane and for the reviewer that writes the code verdict; also the pre-commit `test-audit` (analysis only) |
 | Browser testing | the real-browser gate and the flow review | Haiku: it runs the check scripts in Chrome, applies their pass rule, reads the screenshots and writes the flow verdict. A check script is code and is written by Sonnet |
-| PR description | `pr-description` | the latest Sonnet · high writes it and does the caller / flow search; Haiku runs the check scripts for the before / after screenshots and reads them |
+| PR description | `pr-description` | the latest Sonnet · high writes it and does the caller / flow search; Haiku runs the check scripts for the before / after screenshots, reads them and uploads them with `gh-image-upload` |
 | Persona audit | `wear-the-coat` | as that command's own table says |
 
 A task Sonnet cannot get right is taken back to planning, not handed to a bigger model.
