@@ -2,7 +2,11 @@
 
 Custom [Claude Code](https://claude.com/claude-code) slash commands for a **risk-tiered, evidence-first development cycle**.
 
-Install by copying the files in [`commands/`](./commands) into `~/.claude/commands/`.
+Install: copy [`commands/`](./commands) into `~/.claude/commands/` and [`tools/`](./tools) into `~/.claude/tools/`:
+
+```sh
+cp commands/*.md ~/.claude/commands/ && mkdir -p ~/.claude/tools && cp -r tools/* ~/.claude/tools/
+```
 
 ## The cycle
 
@@ -59,7 +63,7 @@ A task Sonnet cannot get right is taken back to planning, not handed to a bigger
 | `implement` | Build to the criteria with the quality dimensions as live guardrails. |
 | `review-loop` | Multi-dimension Phase-1-floor review loop with a coverage gate. |
 | `wear-the-coat` | Wear a profession's coat and audit a flow's lived experience. |
-| `pr-description` | Write the PR description once the review is GREEN — five fixed sections in Simplified Technical English, screenshots kept out of git. |
+| `pr-description` | Write the PR description once the review is GREEN — five short fixed sections in Simplified Technical English, screenshots uploaded as GitHub attachments so they show inline (never in git). |
 
 ## UI is verified in a real browser
 
@@ -72,6 +76,9 @@ claiming done, `review-loop` gates the green on it (its **Real-browser gate**), 
 [`tools/ui-browser-check/`](./tools/ui-browser-check) is the runner used for the Jarvis SPAs:
 it serves a checkout or git worktree on its own port and runs one Playwright check script
 against it, with the API answered in the script. See its README.
+
+[`tools/gh-image-upload/`](./tools/gh-image-upload) uploads the before / after screenshots to GitHub as PR
+attachments through real Chrome, so `/pr-description` can embed them inline without committing them.
 
 ## Project tools
 

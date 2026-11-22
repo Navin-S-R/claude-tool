@@ -1,0 +1,9 @@
+{
+  "name": "gh-image-upload",
+  "private": true,
+  "type": "module",
+  "description": "Upload screenshots to GitHub as PR attachments through real Chrome and print their URLs.",
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}
