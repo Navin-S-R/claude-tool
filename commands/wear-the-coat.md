@@ -75,19 +75,18 @@ Every **❌ / ⚠️ "missing / broken / unhandled"** finding goes to an **adver
 ## Model assignment (cost-aware)
 Use the **least-capable model that does the role well**. The **controller** (main loop) scouts, casts, aggregates, ranks, and runs the coverage gate at no extra agent cost.
 
-- **opus** — the load-bearing judgment: a persona lens on a **high-stakes / regulated / stateful** journey.
-- **sonnet** — the **default**: explorers, persona lenses on ordinary flows, adversarial verify.
+- **opus** — the load-bearing judgment: a persona lens on a **high-stakes / regulated / stateful** journey, and the single optional tie-break on a load-bearing failure-safety call (Opus · high).
+- **sonnet** — the **default**: explorers, persona lenses on ordinary flows, adversarial verify (Sonnet · high for all of them).
 - **haiku** — mechanical bookkeeping / de-dup.
-- **fable** — expensive; **never per-lens**. Reserve for a single optional tie-break on a load-bearing failure-safety call.
 
 | Role | Model |
 |---|---|
-| Map / explorer (cross-repo, + diff) | sonnet |
-| Persona lens — ordinary flow | sonnet |
-| Persona lens — stateful / regulated / high-volume flow | **opus** |
-| Adversarial verify | sonnet → haiku for a trivial existence check |
-| Cross-lens synthesis | controller, or **opus** when roles conflict sharply |
-| Optional tie-break on a Critical failure-safety finding | **fable** or opus |
+| Map / explorer (cross-repo, + diff) | sonnet · high |
+| Persona lens — ordinary flow | sonnet · high |
+| Persona lens — stateful / regulated / high-volume flow | **opus** · high |
+| Adversarial verify | sonnet · high → haiku for a trivial existence check |
+| Cross-lens synthesis | controller, or **opus** · high when roles conflict sharply |
+| Optional tie-break on a Critical failure-safety finding | **opus** · high |
 
 ## 6. Synthesize & the coverage gate
 - Aggregate every lens's findings; de-dup across coats.

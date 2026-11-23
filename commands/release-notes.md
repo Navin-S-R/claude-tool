@@ -88,6 +88,9 @@ _(skipped M bad refs: #9999 not merged)_
 
 The accounting is for the operator's eyes only — it is NOT part of the pasteable notes.
 
+## Model assignment (SOP)
+This command only writes. It does no review and it dispatches no agent. The main session does the work on **Sonnet · medium**.
+
 ## Guardrails
 - **Read-only.** Only `gh pr view`. Never edit, publish, or call any Jarvis / control-plane endpoint — the operator reviews the draft and publishes by hand.
 - **Draft, not truth.** This produces a first draft for a human to edit. Prefer omitting over guessing.
